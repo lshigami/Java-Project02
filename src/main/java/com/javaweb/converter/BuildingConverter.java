@@ -1,5 +1,8 @@
 package com.javaweb.converter;
 
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,8 +31,8 @@ public class BuildingConverter {
 		//Name of building
 		buildingDTO.setNamOfBuilding(x.getName());
 		//Address
-		DistrictEntity districtEntity= implementDistrictRepo.findById(x.getDistrictid());			
-		buildingDTO.setAddressBuilding(x.getStreet()+","+x.getWard()+","+districtEntity.getName());
+//		DistrictEntity districtEntity= implementDistrictRepo.findById(x.getDistrictid());			
+		buildingDTO.setAddressBuilding(x.getStreet()+","+x.getWard()+","+x.getDistrictEntity().getName());
 		// Number of basement
 		buildingDTO.setNumberOfBasement(x.getNumberofbasement());
 		// Name of Manager
@@ -41,7 +44,7 @@ public class BuildingConverter {
 		// Area is free
 		buildingDTO.setFreeArea("0");
 		//Area for Rent
-		String rentAreaString=implementRentAreaRepo.findRentArea(x.getId());
+		String rentAreaString=x.getAreaEntities().stream().map(i->i.getValue().toString()).collect(Collectors.joining(","));
 		buildingDTO.setRentArea(rentAreaString);
 		//Brokerage FEE
 		buildingDTO.setFeeBrokerage(x.getBrokeragefee());

@@ -12,6 +12,7 @@ import com.javaweb.DTO.BuildingDTO;
 import com.javaweb.builder.BuildingSearchBuilder;
 import com.javaweb.converter.BuildingConverter;
 import com.javaweb.converter.BuildingSearchBuilderConverter;
+import com.javaweb.repository.BuildingRepository;
 import com.javaweb.repository.entity.BuildingEntity;
 import com.javaweb.repository.entity.DistrictEntity;
 import com.javaweb.repository.implement.ImplementBuidlingRepo;
@@ -23,7 +24,7 @@ import com.javaweb.service.BuildingService;
 @Service
 public class ImplementBuildingService implements BuildingService{
 	@Autowired
-	private ImplementBuidlingRepo implementBuidlingRepo;
+	private BuildingRepository buildingRepository;
 	@Autowired
 	private BuildingConverter buildingConverter;
 	@Autowired 
@@ -32,9 +33,7 @@ public class ImplementBuildingService implements BuildingService{
 	public List<BuildingDTO> buildingDTOs(Map<String, Object> params, List<String> typecode) {
 		
 		BuildingSearchBuilder buildingSearchBuilder =buildingSearchBuilderConverter.toBuildingSearchBuilder(params, typecode);
-		
-		
-		List<BuildingEntity>listBuidBuildingEntities=implementBuidlingRepo.findAllBuildingEntities( buildingSearchBuilder );
+		List<BuildingEntity>listBuidBuildingEntities=buildingRepository.findAllBuildingEntities( buildingSearchBuilder );
 		List<BuildingDTO>listBuildingDTOs= new ArrayList<BuildingDTO>();
 		for(BuildingEntity x: listBuidBuildingEntities) {
 			BuildingDTO buildingDTO =buildingConverter.convertToBuildingDTO(x);
