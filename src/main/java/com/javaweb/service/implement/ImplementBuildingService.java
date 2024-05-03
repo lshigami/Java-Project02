@@ -9,6 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.javaweb.DTO.BuildingDTO;
+import com.javaweb.builder.BuildingSearchBuilder;
+import com.javaweb.converter.BuildingConverter;
+import com.javaweb.converter.BuildingSearchBuilderConverter;
+import com.javaweb.repository.BuildingRepository;
 import com.javaweb.repository.entity.BuildingEntity;
 import com.javaweb.repository.entity.DistrictEntity;
 import com.javaweb.repository.implement.ImplementBuidlingRepo;
@@ -20,39 +24,20 @@ import com.javaweb.service.BuildingService;
 @Service
 public class ImplementBuildingService implements BuildingService{
 	@Autowired
-	private ImplementBuidlingRepo implementBuidlingRepo;
+	private BuildingRepository buildingRepository;
 	@Autowired
-	private ImplementDistrictRepo implementDistrictRepo;
-	@Autowired
-	private ImplementRentAreaRepo implementRentAreaRepo;
+	private BuildingConverter buildingConverter;
+	@Autowired 
+	private BuildingSearchBuilderConverter buildingSearchBuilderConverter;
 	@Override
 	public List<BuildingDTO> buildingDTOs(Map<String, Object> params, List<String> typecode) {
-		List<BuildingEntity>listBuidBuildingEntities=implementBuidlingRepo.findAllBuildingEntities(params,typecode);
+		
+		BuildingSearchBuilder buildingSearchBuilder =buildingSearchBuilderConverter.toBuildingSearchBuilder(params, typecode);
+		List<BuildingEntity>listBuidBuildingEntities=buildingRepository.findAllBuildingEntities( buildingSearchBuilder );
 		List<BuildingDTO>listBuildingDTOs= new ArrayList<BuildingDTO>();
 		for(BuildingEntity x: listBuidBuildingEntities) {
-			BuildingDTO buildingDTO = new BuildingDTO();
-			//Name of building
-			buildingDTO.setNamOfBuilding(x.getName());
-			//Address
-			DistrictEntity districtEntity= implementDistrictRepo.findById(x.getDistrictid());			
-			buildingDTO.setAddressBuilding(x.getStreet()+","+x.getWard()+","+districtEntity.getName());
-			// Number of basement
-			buildingDTO.setNumberOfBasement(x.getNumberofbasement());
-			// Name of Manager
-			buildingDTO.setNameOfManager(x.getManagername());
-			// Phonenumber of Manager
-			buildingDTO.setPhoneOfManager(x.getManagerphonenumber());
-			// Area of Floor
-			buildingDTO.setFloorArea(x.getFloorarea());
-			// Area is free
-			buildingDTO.setFreeArea("0");
-			//Area for Rent
-			String rentAreaString=implementRentAreaRepo.findRentArea(x.getId());
-			buildingDTO.setRentArea(rentAreaString);
-			//Brokerage FEE
-			buildingDTO.setFeeBrokerage(x.getBrokeragefee());
+			BuildingDTO buildingDTO =buildingConverter.convertToBuildingDTO(x);
 			listBuildingDTOs.add(buildingDTO);
-
 		}
 		return listBuildingDTOs;
 	}

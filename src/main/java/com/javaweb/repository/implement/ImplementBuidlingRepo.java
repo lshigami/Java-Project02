@@ -1,5 +1,6 @@
 package com.javaweb.repository.implement;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -7,113 +8,111 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
+import com.javaweb.builder.BuildingSearchBuilder;
 import com.javaweb.repository.BuildingRepository;
 import com.javaweb.repository.entity.BuildingEntity;
 import com.javaweb.utils.ArrayValidParamUltil;
 import com.javaweb.utils.ConnectionDBUntil;
 import com.javaweb.utils.StringValidParamUntil;
 
-
 @Repository
 public class ImplementBuidlingRepo implements BuildingRepository {
-	
-	public void joinWith(Map<String, Object> params, List<String> typecode,StringBuilder sql) {
-		String rentAreaFrom =(String) params.get("areaFrom");
-		String rentAreaTo = (String) params.get("areaTo");
-		String staffId =(String)params.get("staffId");
-		
-		if(StringValidParamUntil.isExistParam(rentAreaFrom) || StringValidParamUntil.isExistParam(rentAreaTo) ) sql.append(" JOIN rentarea ra ON ra.buildingid=b.id ");
-		if(StringValidParamUntil.isExistParam(staffId)) sql.append(" JOIN assignmentbuilding ab ON ab.buildingid=b.id ");
-		if(ArrayValidParamUltil.isExistParam(typecode)) sql.append(" JOIN buildingrenttype brt ON b.id=brt.buildingid JOIN renttype rt ON rt.id=brt.renttypeid ");
+	@PersistenceContext
+	private EntityManager entityManager;
+	public void joinWith(BuildingSearchBuilder builder,StringBuilder sql) {
+		Long rentAreaFrom =builder.getAreaFrom();
+		Long rentAreaTo = builder.getAreaTo();
+		Long staffId =builder.getStaffId();
+	    List<String> typeCodeList = builder.getTypeCodeList();
+
+		if(rentAreaFrom!=null || rentAreaTo!=null) sql.append(" JOIN rentarea ra ON ra.buildingid=b.id ");
+		if(staffId!=null) sql.append(" JOIN assignmentbuilding ab ON ab.buildingid=b.id ");
+		if(ArrayValidParamUltil.isExistParam(typeCodeList)) sql.append(" JOIN buildingrenttype brt ON b.id=brt.buildingid JOIN renttype rt ON rt.id=brt.renttypeid ");
 		
 	}
-	public void joinWhere(Map<String, Object> params, List<String> typecode,StringBuilder sql) {
-		for(Map.Entry<String,Object> x : params.entrySet()) {
-			System.out.println(x.getKey());
-			if(!x.getKey().startsWith("area") && !x.getKey().equals("staffId") && !x.getKey().startsWith("rentPrice") && !x.getKey().equals("typeCode") ) {
-				String value =(String) x.getValue();
-				if(StringValidParamUntil.isExistParam(value)) {
-					// is digit
-					if(value.matches("\\d+")) {
-						sql.append(" AND b."+x.getKey()+" = "+value);
-					}else {
-						sql.append(" AND b. " +x.getKey()+" LIKE '%"+ value+"%' ");
+	public void joinWhere(BuildingSearchBuilder builder,StringBuilder sql) {
+		try {
+			Field[] fields = BuildingSearchBuilder.class.getDeclaredFields();
+			for(Field x:fields) {		
+				x.setAccessible(true);
+				if(x.get(builder) == null) {
+                    continue;
+                }
+				String fieldName = x.getName();
+				if(!fieldName.startsWith("area") && !fieldName.equals("staffId") && !fieldName.startsWith("rentPrice") && !fieldName.equals("typeCodeList") ) {
+					
+					String value = x.get(builder).toString();
+					if(StringValidParamUntil.isExistParam(value)) {
+						
+						// is digit
+						if(value.matches("\\d+")) {
+							sql.append(" AND b."+fieldName+" = "+value);
+						}else {
+							sql.append(" AND b. " +fieldName+" LIKE '%"+ value+"%' ");
+						}
+						
+					}
+					
+				}
+				if(fieldName.equals("staffId")) {
+					String data = x.get(builder).toString();
+					if(StringValidParamUntil.isExistParam(data)) {
+						sql.append(" AND ab.staffid = "+data);
 					}
 				}
-			}
-			if(x.getKey().equals("staffId")) {
-				String data=(String)x.getValue();
-				if(StringValidParamUntil.isExistParam(data)) {
-					sql.append(" AND ab.staffid = "+data);
+				else if(fieldName.equals("areaFrom")) {
+					System.out.println("OK");
+					String data = x.get(builder).toString();
+					System.out.println(data);
+					if(StringValidParamUntil.isExistParam(data)) {
+						sql.append(" AND ra.value >= " +data);
+					}
+				}
+				else if(fieldName.equals("areaTo")) {
+					String data = x.get(builder).toString();
+					if(StringValidParamUntil.isExistParam(data)) {
+						sql.append(" AND ra.value <= " +data);
+					}
+				}
+				else if(fieldName.equals("rentPriceFrom")) {
+					String data = x.get(builder).toString();
+					if(StringValidParamUntil.isExistParam(data)) {
+						sql.append(" AND b.rentprice >= " +data);
+					}
+				}
+				else if(fieldName.equals("rentPriceTo")) {
+					String data = x.get(builder).toString();
+					if(StringValidParamUntil.isExistParam(data)) {
+						sql.append(" AND b.rentprice <= " +data);
+					}
+				}
+				if(fieldName.equals("typeCodeList") && ArrayValidParamUltil.isExistParam(builder.getTypeCodeList())) {
+			        String result = "IN (\"" + String.join("\",\"", builder.getTypeCodeList()) + "\")";
+			        sql.append(" AND rt.code " +result);
 				}
 			}
-			if(x.getKey().equals("areaFrom")) {
-				String data=(String)x.getValue();
-				if(StringValidParamUntil.isExistParam(data)) {
-					sql.append(" AND ra.value >= " +data);
-				}
-			}
-			if(x.getKey().equals("areaTo")) {
-				String data=(String)x.getValue();
-				if(StringValidParamUntil.isExistParam(data)) {
-					sql.append(" AND ra.value <= " +data);
-				}
-			}
-			if(x.getKey().equals("rentPriceFrom")) {
-				String data=(String)x.getValue();
-				if(StringValidParamUntil.isExistParam(data)) {
-					sql.append(" AND b.rentprice >= " +data);
-				}
-			}
-			if(x.getKey().equals("rentPriceTo")) {
-				String data=(String)x.getValue();
-				if(StringValidParamUntil.isExistParam(data)) {
-					sql.append(" AND b.rentprice <= " +data);
-				}
-			}
-			if(ArrayValidParamUltil.isExistParam(typecode)) {
-		        String result = "IN (\"" + String.join("\",\"", typecode) + "\")";
-		        sql.append(" AND rt.code " +result);
-			}
-			
-		}
-	}
-	@Override
-	public List<BuildingEntity> findAllBuildingEntities(Map<String, Object> params, List<String> typecode) {
-		StringBuilder sql = new StringBuilder(" SELECT DISTINCT b.* FROM BUILDING b ");
-		joinWith(params, typecode, sql);
-		StringBuilder where = new StringBuilder(" WHERE 1=1 ");
-		joinWhere(params, typecode, where);
-		sql.append(where);
-		System.out.println(sql.toString());
-		List<BuildingEntity>listbBuildingEntities=new ArrayList<BuildingEntity>();
-		try(
-			Connection connection = ConnectionDBUntil.getConnection();
-			Statement statement=connection.createStatement();
-			ResultSet resultSet=statement.executeQuery(sql.toString())
-		){
-			while(resultSet.next()) {
-				BuildingEntity buildingEntity=new BuildingEntity();
-				buildingEntity.setId(resultSet.getString("id"));
-				buildingEntity.setName(resultSet.getString("name"));
-				buildingEntity.setStreet(resultSet.getString("street"));
-				buildingEntity.setWard(resultSet.getString("ward"));
-				buildingEntity.setDistrictid(resultSet.getString("districtid"));
-				buildingEntity.setNumberofbasement(resultSet.getString("numberofbasement"));
-				buildingEntity.setFloorarea(resultSet.getString("floorarea"));
-				buildingEntity.setRentprice(resultSet.getString("rentprice"));
-				buildingEntity.setRentpricedescription(resultSet.getString("rentpricedescription"));
-				buildingEntity.setManagername(resultSet.getString("managername"));
-				buildingEntity.setManagerphonenumber(resultSet.getString("managerphonenumber"));
-				listbBuildingEntities.add(buildingEntity);
-			}
-		}catch (Exception e) {
+		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
 		}
-		return listbBuildingEntities;
+	}
+	@Override
+	public List<BuildingEntity> findAllBuildingEntities(BuildingSearchBuilder builder) {
+		StringBuilder sql = new StringBuilder(" SELECT DISTINCT b.* FROM BUILDING b ");
+		joinWith(builder, sql);
+		StringBuilder where = new StringBuilder(" WHERE 1=1 ");
+		joinWhere(builder, where);
+		sql.append(where);
+		System.out.println(sql.toString());
+		Query sqlnativeQuery = entityManager.createNativeQuery(sql.toString(), BuildingEntity.class);
+		return sqlnativeQuery.getResultList();
 	}
 	
 }

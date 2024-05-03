@@ -14,7 +14,7 @@ import com.javaweb.utils.ConnectionDBUntil;
 public class ImplementRentAreaRepo implements RentAreaRepository {
 
 	@Override
-	public String findRentArea(String buildingid) {
+	public String findRentArea(Long buildingid) {
 		String ans="";
 		String sqlString = " SELECT value FROM rentarea WHERE buildingid = "+buildingid;
 		try(

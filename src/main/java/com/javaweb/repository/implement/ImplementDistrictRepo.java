@@ -14,7 +14,7 @@ import com.javaweb.utils.ConnectionDBUntil;
 public class ImplementDistrictRepo implements DistrictRepository {
 
 	@Override
-	public DistrictEntity findById(String id) {
+	public DistrictEntity findById(Long id) {
 		String sqlString = " SELECT * FROM district WHERE id = "+id;
 		DistrictEntity districtEntity = new DistrictEntity();
 		try(

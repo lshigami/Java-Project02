@@ -10,30 +10,78 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "rentarea")
-public class RentAreaEntity {
+@Table(name = "user_role")
+public class UserRoleEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
 	@ManyToOne
-	@JoinColumn(name="buildingid")
-	private BuildingEntity buildingEntity;
+	@JoinColumn(name="roleid")
+	private RoleEntity roleEntity;
+	@ManyToOne
+	@JoinColumn(name="userid")
+	private UserEntity userEntity;
 	
 	
-	
-	public BuildingEntity getBuildingEntity() {
-		return buildingEntity;
+	public Long getId() {
+		return id;
 	}
-	public void setBuildingEntity(BuildingEntity buildingEntity) {
-		this.buildingEntity = buildingEntity;
+
+	public void setId(Long id) {
+		this.id = id;
 	}
-	@Column(name ="value")
-	private String value;
 
-//	@Column(name ="buildingid")
-//	private String buildingid;
+	public UserEntity getUserEntity() {
+		return userEntity;
+	}
 
+	public void setUserEntity(UserEntity userEntity) {
+		this.userEntity = userEntity;
+	}
+
+	public RoleEntity getRoleEntity() {
+		return roleEntity;
+	}
+
+	public void setRoleEntity(RoleEntity roleEntity) {
+		this.roleEntity = roleEntity;
+	}
+
+	public String getCreateddate() {
+		return createddate;
+	}
+
+	public void setCreateddate(String createddate) {
+		this.createddate = createddate;
+	}
+
+	public String getModifieddate() {
+		return modifieddate;
+	}
+
+	public void setModifieddate(String modifieddate) {
+		this.modifieddate = modifieddate;
+	}
+
+	public String getCreatedby() {
+		return createdby;
+	}
+
+	public void setCreatedby(String createdby) {
+		this.createdby = createdby;
+	}
+
+	public String getModifiedby() {
+		return modifiedby;
+	}
+
+	public void setModifiedby(String modifiedby) {
+		this.modifiedby = modifiedby;
+	}
+
+	
+	
+	
 	@Column(name ="createddate")
 	private String createddate;
 
@@ -45,48 +93,4 @@ public class RentAreaEntity {
 
 	@Column(name ="modifiedby")
 	private String modifiedby;
-
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
-	public String getValue() {
-		return value;
-	}
-	public void setValue(String value) {
-		this.value = value;
-	}
-//	public String getBuildingid() {
-//		return buildingid;
-//	}
-//	public void setBuildingid(String buildingid) {
-//		this.buildingid = buildingid;
-//	}
-	public String getCreateddate() {
-		return createddate;
-	}
-	public void setCreateddate(String createddate) {
-		this.createddate = createddate;
-	}
-	public String getModifieddate() {
-		return modifieddate;
-	}
-	public void setModifieddate(String modifieddate) {
-		this.modifieddate = modifieddate;
-	}
-	public String getCreatedby() {
-		return createdby;
-	}
-	public void setCreatedby(String createdby) {
-		this.createdby = createdby;
-	}
-	public String getModifiedby() {
-		return modifiedby;
-	}
-	public void setModifiedby(String modifiedby) {
-		this.modifiedby = modifiedby;
-	}
-
 }
